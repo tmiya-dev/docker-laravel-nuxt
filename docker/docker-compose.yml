@@ -1,0 +1,46 @@
+version: '3'
+services:
+  web:
+    image: nginx:1.21.6
+    ports:
+     - "8000:80"
+    volumes:
+     - ./web/default.conf:/etc/nginx/conf.d/default.conf
+     - ./log:/var/log/nginx
+     - .:/var/www/html
+     - ../api/public:/var/www/fpm/api
+    depends_on:
+     - php
+     - node
+  node:
+    build: ./node
+    ports:
+     - "3000:3000"
+    working_dir: "/src"
+    volumes:
+     - "../client:/src"
+     - node_module_volume:/src/node_modules
+    tty: true
+    environment:
+    - CHOKIDAR_USEPOLLING=true
+  php:
+    build: ./php
+    depends_on:
+     - mysql
+    volumes:
+     - ../api/public:/var/www/fpm/api
+     - ../api:/var/www/fpm
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABSE: sample
+      MYSQL_USER: user
+      MYSQL_PASSWORD: "p@ssw0rd"
+      MYSQL_ROOT_PASSWORD: "p@ssw0rd"
+    ports:
+     - "3306:3306"
+    volumes:
+     - mysql-data:/var/lib/mysql
+volumes:
+  mysql-data:
+  node_module_volume:
